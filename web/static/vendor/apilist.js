@@ -10982,12 +10982,31 @@ Elm.StartApp.make = function (_elm) {
    var Config = F4(function (a,b,c,d) {    return {init: a,update: b,view: c,inputs: d};});
    return _elm.StartApp.values = {_op: _op,start: start,Config: Config,App: App};
 };
+Elm.AllOwned = Elm.AllOwned || {};
+Elm.AllOwned.make = function (_elm) {
+   "use strict";
+   _elm.AllOwned = _elm.AllOwned || {};
+   if (_elm.AllOwned.values) return _elm.AllOwned.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var view = function (buttonText) {    return A2($Html.button,_U.list([$Html$Attributes.$class("success button")]),_U.list([$Html.text(buttonText)]));};
+   return _elm.AllOwned.values = {_op: _op,view: view};
+};
 Elm.ApiList = Elm.ApiList || {};
 Elm.ApiList.make = function (_elm) {
    "use strict";
    _elm.ApiList = _elm.ApiList || {};
    if (_elm.ApiList.values) return _elm.ApiList.values;
    var _U = Elm.Native.Utils.make(_elm),
+   $AllOwned = Elm.AllOwned.make(_elm),
    $Basics = Elm.Basics.make(_elm),
    $Debug = Elm.Debug.make(_elm),
    $Effects = Elm.Effects.make(_elm),
@@ -11001,6 +11020,8 @@ Elm.ApiList.make = function (_elm) {
    $StartApp = Elm.StartApp.make(_elm),
    $Task = Elm.Task.make(_elm);
    var _op = {};
+   var booksOwnedBox = $Signal.mailbox(true);
+   var booksOwnedRequest = Elm.Native.Port.make(_elm).outboundSignal("booksOwnedRequest",function (v) {    return v;},booksOwnedBox.signal);
    var bookUpdates = Elm.Native.Port.make(_elm).inboundSignal("bookUpdates",
    "ApiList.Book",
    function (v) {
@@ -11031,6 +11052,8 @@ Elm.ApiList.make = function (_elm) {
          v);
       })) : _U.badPort("an array",v);
    });
+   var NoneMine = {ctor: "NoneMine"};
+   var AllMine = {ctor: "AllMine"};
    var UpdateBook = function (a) {    return {ctor: "UpdateBook",_0: a};};
    var bookToUpdate = A2($Signal.map,UpdateBook,bookUpdates);
    var OwnedBook = function (a) {    return {ctor: "OwnedBook",_0: a};};
@@ -11055,8 +11078,22 @@ Elm.ApiList.make = function (_elm) {
               _U.list([$Html$Attributes.$class("column large-11")]),
               _U.list([$Html.text(book.title),$Html.text(A2($Basics._op["++"]," (",A2($Basics._op["++"],$Basics.toString(book.pages)," pages)")))]))]));
    });
-   var view = F2(function (address,model) {    return A2($Html.div,_U.list([$Html$Attributes.$class("books")]),A2($List.map,bookItem(address),model));});
+   var view = F2(function (address,model) {
+      return A2($Html.div,
+      _U.list([$Html$Attributes.$class("books")]),
+      _U.list([A2($Html.div,
+              _U.list([$Html$Attributes.$class("row")]),
+              _U.list([A2($Html.div,
+                      _U.list([$Html$Attributes.$class("column large-2"),A2($Html$Events.onClick,address,AllMine)]),
+                      _U.list([$AllOwned.view("all mine!")]))
+                      ,A2($Html.div,
+                      _U.list([$Html$Attributes.$class("column large-10"),A2($Html$Events.onClick,address,NoneMine)]),
+                      _U.list([$AllOwned.view("none of them...")]))]))
+              ,A2($Html.div,_U.list([]),A2($List.map,bookItem(address),model))]));
+   });
    var NoOp = {ctor: "NoOp"};
+   var sendAllBooksOwned = A2($Effects.map,$Basics.always(NoOp),$Effects.task(A2($Signal.send,booksOwnedBox.address,true)));
+   var sendNoneBooksOwned = A2($Effects.map,$Basics.always(NoOp),$Effects.task(A2($Signal.send,booksOwnedBox.address,false)));
    var SetBooks = function (a) {    return {ctor: "SetBooks",_0: a};};
    var bookListsToSet = A2($Signal.map,SetBooks,bookLists);
    var incomingActions = A2($Signal.merge,bookListsToSet,bookToUpdate);
@@ -11076,6 +11113,8 @@ Elm.ApiList.make = function (_elm) {
          case "UpdateBook": var _p1 = _p0._0;
            var updateBook = function (bookFromModel) {    return _U.eq(_p1.id,bookFromModel.id) ? _p1 : bookFromModel;};
            return {ctor: "_Tuple2",_0: A2($List.map,updateBook,model),_1: $Effects.none};
+         case "AllMine": return {ctor: "_Tuple2",_0: model,_1: sendAllBooksOwned};
+         case "NoneMine": return {ctor: "_Tuple2",_0: model,_1: sendNoneBooksOwned};
          default: return {ctor: "_Tuple2",_0: model,_1: $Effects.none};}
    });
    var init = {ctor: "_Tuple2",_0: _U.list([]),_1: $Effects.none};
@@ -11091,6 +11130,8 @@ Elm.ApiList.make = function (_elm) {
                                 ,NoOp: NoOp
                                 ,OwnedBook: OwnedBook
                                 ,UpdateBook: UpdateBook
+                                ,AllMine: AllMine
+                                ,NoneMine: NoneMine
                                 ,update: update
                                 ,view: view
                                 ,bookItem: bookItem
@@ -11099,5 +11140,8 @@ Elm.ApiList.make = function (_elm) {
                                 ,bookToUpdate: bookToUpdate
                                 ,incomingActions: incomingActions
                                 ,bookOwnedBox: bookOwnedBox
-                                ,sendBookOwned: sendBookOwned};
+                                ,booksOwnedBox: booksOwnedBox
+                                ,sendBookOwned: sendBookOwned
+                                ,sendAllBooksOwned: sendAllBooksOwned
+                                ,sendNoneBooksOwned: sendNoneBooksOwned};
 };

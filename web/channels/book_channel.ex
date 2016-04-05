@@ -5,7 +5,7 @@ defmodule ElmList.BookChannel do
 
   def join("books:manager", payload, socket) do
     if authorized?(payload) do
-      send self, :after_join
+      send self, :reload_books
       {:ok, socket}
     else
       {:error, %{reason: "unauthorized"}}
@@ -38,6 +38,12 @@ defmodule ElmList.BookChannel do
     end
   end
 
+  def handle_in("books_owned", payload, socket) do
+    books = Repo.update_all Book, set: [owned: payload["owned"]]
+    send self, :reload_books
+    {:noreply, socket}
+  end
+
   # This is invoked every time a notification is being broadcast
   # to the client. The default implementation is just to push it
   # downstream but one could filter or change the event.
@@ -51,7 +57,7 @@ defmodule ElmList.BookChannel do
     true
   end
 
-  def handle_info(:after_join, socket) do
+  def handle_info(:reload_books, socket) do
     books = (from b in Book) |> Repo.all
     push socket, "set_books", %{books: render_many(books) }
     {:noreply, socket}

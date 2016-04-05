@@ -8,6 +8,7 @@ import Html.Attributes exposing (class, type', id, for, checked)
 import Html.Events exposing (onClick)
 import Http
 import Json.Decode as Json exposing ((:=))
+import AllOwned exposing (view)
 
 app = StartApp.start
   { init = init
@@ -44,7 +45,7 @@ type alias Model =
 
 
 -- UPDATE
-type Action = SetBooks Model | NoOp | OwnedBook Book | UpdateBook Book
+type Action = SetBooks Model | NoOp | OwnedBook Book | UpdateBook Book | AllMine | NoneMine
 
 
 update : Action -> Model -> (Model, Effects Action)
@@ -62,13 +63,27 @@ update action model =
           else bookFromModel
       in
         (List.map updateBook model, Effects.none)
+    AllMine ->
+      (model, sendAllBooksOwned)
+    NoneMine ->
+      (model, sendNoneBooksOwned)
     NoOp ->
       (model, Effects.none)
 
 -- VIEW
 view : Signal.Address Action -> Model -> Html
 view address model =
-  div [ class "books" ] (List.map (bookItem address) model)
+  div [ class "books" ] [
+    div [ class "row" ] [
+      div
+        [ class "column large-2", onClick address AllMine ]
+        [ AllOwned.view "all mine!" ]
+      , div
+        [ class "column large-10", onClick address NoneMine ]
+        [ AllOwned.view "none of them..." ]
+    ]
+    , div [] (List.map (bookItem address) model)
+  ]
 
 bookItem : Signal.Address Action -> Book -> Html
 bookItem address book =
@@ -130,10 +145,30 @@ bookOwnedBox : Signal.Mailbox Book
 bookOwnedBox =
   Signal.mailbox (Book "" "" 0 False)
 
+port booksOwnedRequest : Signal Bool
+port booksOwnedRequest =
+  booksOwnedBox.signal
+
+booksOwnedBox : Signal.Mailbox Bool
+booksOwnedBox =
+  Signal.mailbox (True)
+
 
 -- EFFECTS
 sendBookOwned : Book -> Effects Action
 sendBookOwned book =
   Signal.send bookOwnedBox.address book
+  |> Effects.task
+  |> Effects.map (always NoOp)
+
+sendAllBooksOwned : Effects Action
+sendAllBooksOwned =
+  Signal.send booksOwnedBox.address True
+  |> Effects.task
+  |> Effects.map (always NoOp)
+
+sendNoneBooksOwned : Effects Action
+sendNoneBooksOwned =
+  Signal.send booksOwnedBox.address False
   |> Effects.task
   |> Effects.map (always NoOp)

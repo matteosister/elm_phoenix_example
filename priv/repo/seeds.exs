@@ -34,6 +34,6 @@ end
 
 ElmList.Repo.delete_all(ElmList.Book)
 
-10
+50
 |> Seeds.random_books
 |> Enum.map(&(ElmList.Repo.insert!(&1)))

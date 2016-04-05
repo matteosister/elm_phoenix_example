@@ -1,0 +1,18 @@
+Elm.AllOwned = Elm.AllOwned || {};
+Elm.AllOwned.make = function (_elm) {
+   "use strict";
+   _elm.AllOwned = _elm.AllOwned || {};
+   if (_elm.AllOwned.values) return _elm.AllOwned.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var view = function (buttonText) {    return A2($Html.button,_U.list([$Html$Attributes.$class("success button")]),_U.list([$Html.text(buttonText)]));};
+   return _elm.AllOwned.values = {_op: _op,view: view};
+};

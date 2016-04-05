@@ -42,6 +42,7 @@ exports.config = {
       "web/static",
       "test/static",
       "web/elm/ApiList.elm",
+      "web/elm/AlllOwned.elm",
       "node_modules/foundation-sites/dist/foundation-flex.css"
     ],
 

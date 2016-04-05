@@ -30,7 +30,6 @@ channel.join()
   .receive("error", resp => { console.log("Unable to join", resp) })
 
 channel.on("set_books", data => {
-  console.log("got books!", data.books)
   elmApp.ports.bookLists.send(data.books)
 })
 channel.on("book_updated", book => {
@@ -38,6 +37,8 @@ channel.on("book_updated", book => {
 })
 
 elmApp.ports.bookOwnedRequest.subscribe(book => {
-  console.log(book)
   channel.push("book_owned", book)
+})
+elmApp.ports.booksOwnedRequest.subscribe(owned => {
+  channel.push("books_owned", {owned: owned})
 })
