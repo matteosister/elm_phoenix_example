@@ -1,0 +1,10 @@
+
+$owned_color: #AAA;
+
+.book.not-owned {
+  color: $owned_color;
+}
+
+.book.owned {
+  color: green;
+}

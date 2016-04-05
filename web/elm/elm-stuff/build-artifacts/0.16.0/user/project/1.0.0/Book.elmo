@@ -1,0 +1,16 @@
+Elm.Book = Elm.Book || {};
+Elm.Book.make = function (_elm) {
+   "use strict";
+   _elm.Book = _elm.Book || {};
+   if (_elm.Book.values) return _elm.Book.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm);
+   var _op = {};
+   var Book = F4(function (a,b,c,d) {    return {id: a,title: b,pages: c,owned: d};});
+   return _elm.Book.values = {_op: _op,Book: Book};
+};

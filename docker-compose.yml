@@ -1,0 +1,14 @@
+web:
+  build: .
+  volumes:
+    - .:/code
+  working_dir: /code
+  ports:
+    - 4000:4000
+  links:
+    - db
+
+db:
+  image: mysql:5.7
+  environment:
+    MYSQL_ROOT_PASSWORD: "elm_list"

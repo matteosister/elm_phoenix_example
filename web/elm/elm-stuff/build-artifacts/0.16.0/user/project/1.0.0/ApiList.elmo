@@ -1,0 +1,119 @@
+Elm.ApiList = Elm.ApiList || {};
+Elm.ApiList.make = function (_elm) {
+   "use strict";
+   _elm.ApiList = _elm.ApiList || {};
+   if (_elm.ApiList.values) return _elm.ApiList.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Effects = Elm.Effects.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $Html$Events = Elm.Html.Events.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $StartApp = Elm.StartApp.make(_elm),
+   $Task = Elm.Task.make(_elm);
+   var _op = {};
+   var bookUpdates = Elm.Native.Port.make(_elm).inboundSignal("bookUpdates",
+   "ApiList.Book",
+   function (v) {
+      return typeof v === "object" && "id" in v && "title" in v && "pages" in v && "owned" in v ? {_: {}
+                                                                                                  ,id: typeof v.id === "string" || typeof v.id === "object" && v.id instanceof String ? v.id : _U.badPort("a string",
+                                                                                                  v.id)
+                                                                                                  ,title: typeof v.title === "string" || typeof v.title === "object" && v.title instanceof String ? v.title : _U.badPort("a string",
+                                                                                                  v.title)
+                                                                                                  ,pages: typeof v.pages === "number" && isFinite(v.pages) && Math.floor(v.pages) === v.pages ? v.pages : _U.badPort("an integer",
+                                                                                                  v.pages)
+                                                                                                  ,owned: typeof v.owned === "boolean" ? v.owned : _U.badPort("a boolean (true or false)",
+                                                                                                  v.owned)} : _U.badPort("an object with fields `id`, `title`, `pages`, `owned`",
+      v);
+   });
+   var bookLists = Elm.Native.Port.make(_elm).inboundSignal("bookLists",
+   "ApiList.Model",
+   function (v) {
+      return typeof v === "object" && v instanceof Array ? Elm.Native.List.make(_elm).fromArray(v.map(function (v) {
+         return typeof v === "object" && "id" in v && "title" in v && "pages" in v && "owned" in v ? {_: {}
+                                                                                                     ,id: typeof v.id === "string" || typeof v.id === "object" && v.id instanceof String ? v.id : _U.badPort("a string",
+                                                                                                     v.id)
+                                                                                                     ,title: typeof v.title === "string" || typeof v.title === "object" && v.title instanceof String ? v.title : _U.badPort("a string",
+                                                                                                     v.title)
+                                                                                                     ,pages: typeof v.pages === "number" && isFinite(v.pages) && Math.floor(v.pages) === v.pages ? v.pages : _U.badPort("an integer",
+                                                                                                     v.pages)
+                                                                                                     ,owned: typeof v.owned === "boolean" ? v.owned : _U.badPort("a boolean (true or false)",
+                                                                                                     v.owned)} : _U.badPort("an object with fields `id`, `title`, `pages`, `owned`",
+         v);
+      })) : _U.badPort("an array",v);
+   });
+   var UpdateBook = function (a) {    return {ctor: "UpdateBook",_0: a};};
+   var bookToUpdate = A2($Signal.map,UpdateBook,bookUpdates);
+   var OwnedBook = function (a) {    return {ctor: "OwnedBook",_0: a};};
+   var bookSwitch = F2(function (address,book) {
+      return A2($Html.div,
+      _U.list([$Html$Attributes.$class("switch")]),
+      _U.list([A2($Html.input,
+              _U.list([$Html$Attributes.$class("switch-input")
+                      ,$Html$Attributes.type$("checkbox")
+                      ,$Html$Attributes.id(A2($Basics._op["++"],"book",book.id))
+                      ,A2($Html$Events.onClick,address,OwnedBook(book))
+                      ,$Html$Attributes.checked(book.owned)]),
+              _U.list([]))
+              ,A2($Html.label,_U.list([$Html$Attributes.$class("switch-paddle"),$Html$Attributes.$for(A2($Basics._op["++"],"book",book.id))]),_U.list([]))]));
+   });
+   var bookItem = F2(function (address,book) {
+      var ownedClass = book.owned ? "owned" : "not-owned";
+      return A2($Html.div,
+      _U.list([$Html$Attributes.$class(A2($Basics._op["++"],"book row ",ownedClass))]),
+      _U.list([A2($Html.div,_U.list([$Html$Attributes.$class("column large-1")]),_U.list([A2(bookSwitch,address,book)]))
+              ,A2($Html.div,
+              _U.list([$Html$Attributes.$class("column large-11")]),
+              _U.list([$Html.text(book.title),$Html.text(A2($Basics._op["++"]," (",A2($Basics._op["++"],$Basics.toString(book.pages)," pages)")))]))]));
+   });
+   var view = F2(function (address,model) {    return A2($Html.div,_U.list([$Html$Attributes.$class("books")]),A2($List.map,bookItem(address),model));});
+   var NoOp = {ctor: "NoOp"};
+   var SetBooks = function (a) {    return {ctor: "SetBooks",_0: a};};
+   var bookListsToSet = A2($Signal.map,SetBooks,bookLists);
+   var incomingActions = A2($Signal.merge,bookListsToSet,bookToUpdate);
+   var Book = F4(function (a,b,c,d) {    return {id: a,title: b,pages: c,owned: d};});
+   var bookOwnedBox = $Signal.mailbox(A4(Book,"","",0,false));
+   var bookOwnedRequest = Elm.Native.Port.make(_elm).outboundSignal("bookOwnedRequest",
+   function (v) {
+      return {id: v.id,title: v.title,pages: v.pages,owned: v.owned};
+   },
+   bookOwnedBox.signal);
+   var sendBookOwned = function (book) {    return A2($Effects.map,$Basics.always(NoOp),$Effects.task(A2($Signal.send,bookOwnedBox.address,book)));};
+   var update = F2(function (action,model) {
+      var _p0 = action;
+      switch (_p0.ctor)
+      {case "SetBooks": return {ctor: "_Tuple2",_0: _p0._0,_1: $Effects.none};
+         case "OwnedBook": return {ctor: "_Tuple2",_0: model,_1: sendBookOwned(_p0._0)};
+         case "UpdateBook": var _p1 = _p0._0;
+           var updateBook = function (bookFromModel) {    return _U.eq(_p1.id,bookFromModel.id) ? _p1 : bookFromModel;};
+           return {ctor: "_Tuple2",_0: A2($List.map,updateBook,model),_1: $Effects.none};
+         default: return {ctor: "_Tuple2",_0: model,_1: $Effects.none};}
+   });
+   var init = {ctor: "_Tuple2",_0: _U.list([]),_1: $Effects.none};
+   var app = $StartApp.start({init: init,update: update,view: view,inputs: _U.list([incomingActions])});
+   var main = app.html;
+   var tasks = Elm.Native.Task.make(_elm).performSignal("tasks",app.tasks);
+   return _elm.ApiList.values = {_op: _op
+                                ,app: app
+                                ,main: main
+                                ,init: init
+                                ,Book: Book
+                                ,SetBooks: SetBooks
+                                ,NoOp: NoOp
+                                ,OwnedBook: OwnedBook
+                                ,UpdateBook: UpdateBook
+                                ,update: update
+                                ,view: view
+                                ,bookItem: bookItem
+                                ,bookSwitch: bookSwitch
+                                ,bookListsToSet: bookListsToSet
+                                ,bookToUpdate: bookToUpdate
+                                ,incomingActions: incomingActions
+                                ,bookOwnedBox: bookOwnedBox
+                                ,sendBookOwned: sendBookOwned};
+};
