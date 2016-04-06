@@ -1,5 +1,6 @@
 web:
-  build: .
+  #build: .
+  image: matteosister/phoenix-elm:1.0.0
   volumes:
     - .:/code
   working_dir: /code
