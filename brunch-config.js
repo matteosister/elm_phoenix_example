@@ -42,8 +42,11 @@ exports.config = {
       "web/static",
       "test/static",
       "web/elm/ApiList.elm",
-      "web/elm/AlllOwned.elm",
-      "node_modules/foundation-sites/dist/foundation-flex.css"
+      "web/elm/AllOwned.elm",
+      "web/elm/AList.elm",
+      "web/elm/Title.elm",
+      "web/elm/Book.elm"
+      //"node_modules/foundation-sites/dist/foundation-flex.css"
     ],
 
     // Where to compile files to
@@ -58,7 +61,7 @@ exports.config = {
     },
     elmBrunch: {
       elmFolder: 'web/elm',
-      mainModules: ['ApiList.elm'],
+      mainModules: ['AList.elm'],
       outputFolder: '../static/vendor'
     },
     sass: {}
@@ -74,6 +77,6 @@ exports.config = {
     enabled: true,
     // Whitelist the npm deps to be pulled in as front-end assets.
     // All other deps in package.json will be excluded from the bundle.
-    whitelist: ["phoenix", "phoenix_html", "foundation-sites"]
+    whitelist: ["phoenix", "phoenix_html"]
   }
 };

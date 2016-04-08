@@ -1,0 +1,69 @@
+Elm.AList = Elm.AList || {};
+Elm.AList.make = function (_elm) {
+   "use strict";
+   _elm.AList = _elm.AList || {};
+   if (_elm.AList.values) return _elm.AList.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Book = Elm.Book.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $Effects = Elm.Effects.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $StartApp = Elm.StartApp.make(_elm),
+   $Title = Elm.Title.make(_elm);
+   var _op = {};
+   var bookLists = Elm.Native.Port.make(_elm).inboundSignal("bookLists",
+   "AList.Model",
+   function (v) {
+      return typeof v === "object" && v instanceof Array ? Elm.Native.List.make(_elm).fromArray(v.map(function (v) {
+         return typeof v === "object" && "id" in v && "title" in v && "pages" in v && "owned" in v ? {_: {}
+                                                                                                     ,id: typeof v.id === "string" || typeof v.id === "object" && v.id instanceof String ? v.id : _U.badPort("a string",
+                                                                                                     v.id)
+                                                                                                     ,title: typeof v.title === "string" || typeof v.title === "object" && v.title instanceof String ? v.title : _U.badPort("a string",
+                                                                                                     v.title)
+                                                                                                     ,pages: typeof v.pages === "number" && isFinite(v.pages) && Math.floor(v.pages) === v.pages ? v.pages : _U.badPort("an integer",
+                                                                                                     v.pages)
+                                                                                                     ,owned: typeof v.owned === "boolean" ? v.owned : _U.badPort("a boolean (true or false)",
+                                                                                                     v.owned)} : _U.badPort("an object with fields `id`, `title`, `pages`, `owned`",
+         v);
+      })) : _U.badPort("an array",v);
+   });
+   var update = F2(function (action,model) {
+      var _p0 = action;
+      if (_p0.ctor === "BooksReceived") {
+            return {ctor: "_Tuple2",_0: _p0._0,_1: $Effects.none};
+         } else {
+            var _p1 = _p0._0;
+            var updateBook = function (bookFromModel) {    return _U.eq(bookFromModel.id,_p1.id) ? A2($Book.update,_p0._1,_p1) : bookFromModel;};
+            return {ctor: "_Tuple2",_0: A2($List.map,updateBook,model),_1: $Effects.none};
+         }
+   });
+   var init = {ctor: "_Tuple2",_0: _U.list([]),_1: $Effects.none};
+   var Updated = F2(function (a,b) {    return {ctor: "Updated",_0: a,_1: b};});
+   var bookList = F2(function (address,books) {
+      var bookView = function (book) {    return A2($Book.view,A2($Signal.forwardTo,address,Updated(book)),book);};
+      return A2($Html.div,_U.list([]),A2($List.map,bookView,books));
+   });
+   var view = F2(function (address,model) {
+      return A2($Html.div,_U.list([$Html$Attributes.$class("container")]),_U.list([$Title.view,A2(bookList,address,model)]));
+   });
+   var BooksReceived = function (a) {    return {ctor: "BooksReceived",_0: a};};
+   var bookListReceived = A2($Signal.map,BooksReceived,bookLists);
+   var app = $StartApp.start({init: init,update: update,view: view,inputs: _U.list([bookListReceived])});
+   var main = app.html;
+   return _elm.AList.values = {_op: _op
+                              ,app: app
+                              ,main: main
+                              ,BooksReceived: BooksReceived
+                              ,Updated: Updated
+                              ,init: init
+                              ,update: update
+                              ,view: view
+                              ,bookList: bookList
+                              ,bookListReceived: bookListReceived};
+};

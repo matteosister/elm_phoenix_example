@@ -6,6 +6,7 @@ web:
   working_dir: /code
   ports:
     - 4000:4000
+    - 8000:8000
   links:
     - db
 

@@ -6,11 +6,54 @@ Elm.Book.make = function (_elm) {
    var _U = Elm.Native.Utils.make(_elm),
    $Basics = Elm.Basics.make(_elm),
    $Debug = Elm.Debug.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $Html$Events = Elm.Html.Events.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm);
    var _op = {};
+   var pagesNumber = function (pages) {    return A2($Html.small,_U.list([]),_U.list([$Html.text($Basics.toString(pages)),$Html.text(" pages ")]));};
+   var update = F2(function (action,model) {
+      var _p0 = action;
+      switch (_p0.ctor)
+      {case "Select": return _U.update(model,{owned: true});
+         case "Unselect": return _U.update(model,{owned: false});
+         default: return _U.update(model,{owned: $Basics.not(model.owned)});}
+   });
+   var Toggle = {ctor: "Toggle"};
+   var title = F2(function (address,book) {
+      return A2($Html.h4,
+      _U.list([$Html$Attributes.$class("text-info")
+              ,$Html$Attributes.classList(_U.list([{ctor: "_Tuple2",_0: "text-success",_1: book.owned}
+                                                  ,{ctor: "_Tuple2",_0: "text-danger",_1: $Basics.not(book.owned)}]))
+              ,A2($Html$Events.onClick,address,Toggle)]),
+      _U.list([$Html.text(book.title)]));
+   });
+   var Unselect = {ctor: "Unselect"};
+   var Select = {ctor: "Select"};
+   var switchOwned = F2(function (address,owned) {
+      return owned ? A2($Html.button,_U.list([A2($Html$Events.onClick,address,Unselect)]),_U.list([$Html.text("I don\'t have it :(")])) : A2($Html.button,
+      _U.list([A2($Html$Events.onClick,address,Select)]),
+      _U.list([$Html.text("I have it!")]));
+   });
+   var view = F2(function (address,model) {
+      return A2($Html.div,
+      _U.list([$Html$Attributes.$class("book")]),
+      _U.list([A2(title,address,model),pagesNumber(model.pages),A2(switchOwned,address,model.owned)]));
+   });
+   var init = function (book) {    return book;};
    var Book = F4(function (a,b,c,d) {    return {id: a,title: b,pages: c,owned: d};});
-   return _elm.Book.values = {_op: _op,Book: Book};
+   return _elm.Book.values = {_op: _op
+                             ,Book: Book
+                             ,init: init
+                             ,Select: Select
+                             ,Unselect: Unselect
+                             ,Toggle: Toggle
+                             ,update: update
+                             ,view: view
+                             ,title: title
+                             ,pagesNumber: pagesNumber
+                             ,switchOwned: switchOwned};
 };

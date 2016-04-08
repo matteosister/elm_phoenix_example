@@ -19,7 +19,7 @@ defmodule Seeds do
 
   def random_book do
     %ElmList.Book{
-      title: Faker.Lorem.sentence(4..6),
+      title: Faker.Lorem.words(3..6) |> Enum.join(" "),
       pages: Seeds.random_number,
       owned: hd(Enum.shuffle([true, false]))
     }
@@ -32,8 +32,15 @@ defmodule Seeds do
   end
 end
 
-ElmList.Repo.delete_all(ElmList.Book)
+num = if length(System.argv) > 0 do
+  {num, _} = Integer.parse(hd(System.argv))
+  num
+else
+  6
+end
 
-50
+ElmList.Repo.delete_all(ElmList.Book)
+IO.puts "Adding #{num} entries"
+num
 |> Seeds.random_books
 |> Enum.map(&(ElmList.Repo.insert!(&1)))

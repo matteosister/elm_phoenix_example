@@ -21,8 +21,9 @@ import "phoenix_html"
 import socket from "./socket"
 
 const elmDiv = document.getElementById('elm-main')
-const initialState = {bookLists: [], bookUpdates: {id: "", title: "", pages: 0, owned: false}}
-const elmApp = Elm.embed(Elm.ApiList, elmDiv, initialState)
+// const initialState = {bookLists: [], bookUpdates: {id: "", title: "", pages: 0, owned: false}}
+const initialState = {bookLists: []}
+const elmApp = Elm.fullscreen(Elm.AList, initialState)
 
 let channel = socket.channel("books:manager", {})
 channel.join()
@@ -30,15 +31,16 @@ channel.join()
   .receive("error", resp => { console.log("Unable to join", resp) })
 
 channel.on("set_books", data => {
+  console.log(data.books)
   elmApp.ports.bookLists.send(data.books)
 })
 channel.on("book_updated", book => {
-  elmApp.ports.bookUpdates.send(book)
+  //elmApp.ports.bookUpdates.send(book)
 })
 
-elmApp.ports.bookOwnedRequest.subscribe(book => {
-  channel.push("book_owned", book)
-})
-elmApp.ports.booksOwnedRequest.subscribe(owned => {
-  channel.push("books_owned", {owned: owned})
-})
+// elmApp.ports.bookOwnedRequest.subscribe(book => {
+//   channel.push("book_owned", book)
+// })
+// elmApp.ports.booksOwnedRequest.subscribe(owned => {
+//   channel.push("books_owned", {owned: owned})
+// })
