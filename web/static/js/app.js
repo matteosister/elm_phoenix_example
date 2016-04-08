@@ -22,7 +22,7 @@ import socket from "./socket"
 
 const elmDiv = document.getElementById('elm-main')
 // const initialState = {bookLists: [], bookUpdates: {id: "", title: "", pages: 0, owned: false}}
-const initialState = {bookLists: []}
+const initialState = {bookLists: [], bookUpdated: {id: "", title: "", pages: 0, owned: false}}
 const elmApp = Elm.fullscreen(Elm.AList, initialState)
 
 let channel = socket.channel("books:manager", {})
@@ -31,13 +31,16 @@ channel.join()
   .receive("error", resp => { console.log("Unable to join", resp) })
 
 channel.on("set_books", data => {
-  console.log(data.books)
   elmApp.ports.bookLists.send(data.books)
 })
 channel.on("book_updated", book => {
-  //elmApp.ports.bookUpdates.send(book)
+  elmApp.ports.bookUpdated.send(book)
 })
 
+console.log(elmApp.ports)
+elmApp.ports.bookRequest.subscribe(book => {
+  channel.push("book_update", book)
+})
 // elmApp.ports.bookOwnedRequest.subscribe(book => {
 //   channel.push("book_owned", book)
 // })

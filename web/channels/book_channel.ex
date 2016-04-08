@@ -38,6 +38,24 @@ defmodule ElmList.BookChannel do
     end
   end
 
+  def handle_in("book_update", payload, socket) do
+    book = Repo.get! Book, payload["id"]
+    params = payload
+    |> Map.to_list
+    |> Enum.map(fn {k, v} -> { String.to_atom(k), v } end)
+    |> Keyword.drop([:id, :pages, :title])
+    |> Map.new
+    |> IO.inspect
+    changeset = Book.changeset(book, params)
+    case Repo.update(changeset) do
+      {:ok, book} ->
+        broadcast socket, "book_updated", render_one(book)
+        {:noreply, socket}
+      {:error, _changeset} ->
+        {:reply, {:error, %{message: "Something went wrong."}}, socket}
+    end
+  end
+
   def handle_in("books_owned", payload, socket) do
     books = Repo.update_all Book, set: [owned: payload["owned"]]
     send self, :reload_books

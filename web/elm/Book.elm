@@ -1,7 +1,7 @@
 module Book where
 
 import Html exposing (..)
-import Html.Attributes exposing (class, classList)
+import Html.Attributes exposing (class, classList, id)
 import Html.Events exposing (onClick)
 
 
@@ -35,7 +35,6 @@ update action model =
     Toggle ->
       {model | owned = not model.owned}
 
-
 -- VIEW
 
 view : Signal.Address Action -> Model -> Html
@@ -49,6 +48,7 @@ title : Signal.Address Action -> Model -> Html
 title address book =
   h4
     [ class "text-info"
+    , id book.id
     , classList [ ("text-success", book.owned), ("text-danger", (not book.owned)) ]
     , onClick address Toggle ]
     [ book.title |> text ]

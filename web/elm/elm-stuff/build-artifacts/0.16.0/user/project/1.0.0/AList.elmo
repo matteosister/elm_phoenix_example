@@ -15,8 +15,29 @@ Elm.AList.make = function (_elm) {
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $StartApp = Elm.StartApp.make(_elm),
+   $Task = Elm.Task.make(_elm),
    $Title = Elm.Title.make(_elm);
    var _op = {};
+   var bookBox = $Signal.mailbox(A4($Book.Book,"","",0,false));
+   var bookRequest = Elm.Native.Port.make(_elm).outboundSignal("bookRequest",
+   function (v) {
+      return {id: v.id,title: v.title,pages: v.pages,owned: v.owned};
+   },
+   bookBox.signal);
+   var bookUpdated = Elm.Native.Port.make(_elm).inboundSignal("bookUpdated",
+   "Book.Book",
+   function (v) {
+      return typeof v === "object" && "id" in v && "title" in v && "pages" in v && "owned" in v ? {_: {}
+                                                                                                  ,id: typeof v.id === "string" || typeof v.id === "object" && v.id instanceof String ? v.id : _U.badPort("a string",
+                                                                                                  v.id)
+                                                                                                  ,title: typeof v.title === "string" || typeof v.title === "object" && v.title instanceof String ? v.title : _U.badPort("a string",
+                                                                                                  v.title)
+                                                                                                  ,pages: typeof v.pages === "number" && isFinite(v.pages) && Math.floor(v.pages) === v.pages ? v.pages : _U.badPort("an integer",
+                                                                                                  v.pages)
+                                                                                                  ,owned: typeof v.owned === "boolean" ? v.owned : _U.badPort("a boolean (true or false)",
+                                                                                                  v.owned)} : _U.badPort("an object with fields `id`, `title`, `pages`, `owned`",
+      v);
+   });
    var bookLists = Elm.Native.Port.make(_elm).inboundSignal("bookLists",
    "AList.Model",
    function (v) {
@@ -33,17 +54,21 @@ Elm.AList.make = function (_elm) {
          v);
       })) : _U.badPort("an array",v);
    });
+   var init = {ctor: "_Tuple2",_0: _U.list([]),_1: $Effects.none};
+   var BookUpdated = function (a) {    return {ctor: "BookUpdated",_0: a};};
+   var bookUpdateReceived = A2($Signal.map,BookUpdated,bookUpdated);
+   var NoOp = {ctor: "NoOp"};
+   var remoteUpdateBook = function (book) {    return A2($Effects.map,$Basics.always(NoOp),$Effects.task(A2($Signal.send,bookBox.address,book)));};
    var update = F2(function (action,model) {
       var _p0 = action;
-      if (_p0.ctor === "BooksReceived") {
-            return {ctor: "_Tuple2",_0: _p0._0,_1: $Effects.none};
-         } else {
-            var _p1 = _p0._0;
-            var updateBook = function (bookFromModel) {    return _U.eq(bookFromModel.id,_p1.id) ? A2($Book.update,_p0._1,_p1) : bookFromModel;};
-            return {ctor: "_Tuple2",_0: A2($List.map,updateBook,model),_1: $Effects.none};
-         }
+      switch (_p0.ctor)
+      {case "BooksReceived": return {ctor: "_Tuple2",_0: _p0._0,_1: $Effects.none};
+         case "Updated": return {ctor: "_Tuple2",_0: model,_1: remoteUpdateBook(A2($Book.update,_p0._1,_p0._0))};
+         case "BookUpdated": var _p1 = _p0._0;
+           var updateBook = function (bookFromModel) {    return _U.eq(bookFromModel.id,_p1.id) ? _p1 : bookFromModel;};
+           return {ctor: "_Tuple2",_0: A2($List.map,updateBook,model),_1: $Effects.none};
+         default: return {ctor: "_Tuple2",_0: model,_1: $Effects.none};}
    });
-   var init = {ctor: "_Tuple2",_0: _U.list([]),_1: $Effects.none};
    var Updated = F2(function (a,b) {    return {ctor: "Updated",_0: a,_1: b};});
    var bookList = F2(function (address,books) {
       var bookView = function (book) {    return A2($Book.view,A2($Signal.forwardTo,address,Updated(book)),book);};
@@ -54,16 +79,22 @@ Elm.AList.make = function (_elm) {
    });
    var BooksReceived = function (a) {    return {ctor: "BooksReceived",_0: a};};
    var bookListReceived = A2($Signal.map,BooksReceived,bookLists);
-   var app = $StartApp.start({init: init,update: update,view: view,inputs: _U.list([bookListReceived])});
+   var app = $StartApp.start({init: init,update: update,view: view,inputs: _U.list([bookListReceived,bookUpdateReceived])});
    var main = app.html;
+   var tasks = Elm.Native.Task.make(_elm).performSignal("tasks",app.tasks);
    return _elm.AList.values = {_op: _op
                               ,app: app
                               ,main: main
                               ,BooksReceived: BooksReceived
                               ,Updated: Updated
+                              ,NoOp: NoOp
+                              ,BookUpdated: BookUpdated
                               ,init: init
                               ,update: update
                               ,view: view
                               ,bookList: bookList
-                              ,bookListReceived: bookListReceived};
+                              ,bookListReceived: bookListReceived
+                              ,bookUpdateReceived: bookUpdateReceived
+                              ,bookBox: bookBox
+                              ,remoteUpdateBook: remoteUpdateBook};
 };

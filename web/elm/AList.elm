@@ -3,21 +3,27 @@ module AList where
 import StartApp
 import Html exposing (..)
 import Html.Attributes exposing (class)
-import Effects exposing (Effects)
+import Effects exposing (Effects, Never)
 import Title exposing (view)
 import Book exposing (..)
+import Task exposing (Task)
 
 
 app = StartApp.start
   { init = init
   , update = update
   , view = view
-  , inputs = [bookListReceived]
+  , inputs = [bookListReceived, bookUpdateReceived]
   }
 
 
 main : Signal Html
 main = app.html
+
+
+port tasks : Signal (Task Never ())
+port tasks =
+  app.tasks
 
 -- MODEL
 
@@ -29,6 +35,8 @@ type alias Model =
 type Action
   = BooksReceived Model
   | Updated Book Book.Action
+  | NoOp
+  | BookUpdated Book
 
 
 init : (Model, Effects Action)
@@ -44,13 +52,16 @@ update action model =
     BooksReceived books ->
       (books, Effects.none)
     Updated book action ->
+      (model, remoteUpdateBook (Book.update action book))
+    BookUpdated book ->
       let updateBook bookFromModel =
         if bookFromModel.id == book.id then
-          Book.update action book
-        else
-          bookFromModel
+          book
+        else bookFromModel
       in
         (List.map updateBook model, Effects.none)
+    NoOp ->
+      (model, Effects.none)
 
 -- VIEW
 
@@ -77,6 +88,36 @@ bookList address books =
 
 port bookLists : Signal Model
 
+
 bookListReceived: Signal Action
 bookListReceived =
   Signal.map BooksReceived bookLists
+
+
+
+port bookUpdated : Signal Book
+
+
+bookUpdateReceived: Signal Action
+bookUpdateReceived =
+  Signal.map BookUpdated bookUpdated
+
+
+-- EFFECTS
+
+
+port bookRequest : Signal Book
+port bookRequest =
+  bookBox.signal
+
+
+bookBox : Signal.Mailbox Book
+bookBox =
+  Signal.mailbox (Book "" "" 0 False)
+
+
+remoteUpdateBook : Book -> Effects Action
+remoteUpdateBook book =
+  Signal.send bookBox.address book
+  |> Effects.task
+  |> Effects.map (always NoOp)

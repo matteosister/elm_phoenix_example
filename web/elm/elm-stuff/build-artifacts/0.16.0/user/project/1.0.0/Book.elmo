@@ -26,6 +26,7 @@ Elm.Book.make = function (_elm) {
    var title = F2(function (address,book) {
       return A2($Html.h4,
       _U.list([$Html$Attributes.$class("text-info")
+              ,$Html$Attributes.id(book.id)
               ,$Html$Attributes.classList(_U.list([{ctor: "_Tuple2",_0: "text-success",_1: book.owned}
                                                   ,{ctor: "_Tuple2",_0: "text-danger",_1: $Basics.not(book.owned)}]))
               ,A2($Html$Events.onClick,address,Toggle)]),
